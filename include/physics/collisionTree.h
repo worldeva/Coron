@@ -5,6 +5,7 @@
 class collisionTree;
 class alignedHitbox;
 class collisionNode;
+class collisionEvent;
 
 class alignedHitbox
 {
@@ -18,7 +19,8 @@ public:
 class collisionEvent
 {
 public:
-	gObject* 
+	gObject* object;
+	std::vector<gObject*> collisions;
 };
 
 class collisionNode
@@ -62,11 +64,11 @@ public:
 
 	void updateCollision(int nodeIterator);
 
-	gObject* getNextCollision();
+	collisionEvent getNextCollision();
 	gObject* peekNextCollision();
 private:
 	std::vector<collisionNode> nodeVector;
 	std::vector<int> freeNodes;
-	std::vector<gObject*> nodeCollisions;
+	std::vector<collisionEvent> nodeCollisions;
 	std::vector<int> updateStack;
 };

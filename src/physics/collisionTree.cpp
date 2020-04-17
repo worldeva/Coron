@@ -65,6 +65,11 @@ bool collisionNode::isCollide(alignedHitbox* checkAABB)
 	}
 }
 
+int collisionTree::findSpace()
+{
+	return 0;
+}
+
 int collisionTree::createNode()
 {
 	return 0;
@@ -83,7 +88,12 @@ void collisionTree::updateCollision(int nodeIterator)
 	} while (!updateStack.size());
 }
 
-gObject* collisionTree::getNextCollision()
+collisionEvent collisionTree::getNextCollision()
 {
-	return collision;
+
+}
+
+gObject* collisionTree::peekNextCollision()
+{
+	return nullptr;
 }
