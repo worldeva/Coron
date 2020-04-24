@@ -1,6 +1,7 @@
 #pragma once
 #include "gObject.h"
 #include <vector>
+#include <algorithm>
 
 class collisionTree;
 class alignedHitbox;
@@ -32,16 +33,12 @@ public:
 	bool isCollide(collisionNode* check);
 	static bool isCollide(collisionNode* a, alignedHitbox* b);
 	bool isCollide(alignedHitbox* checkAABB);
-private:
+
 	bool isLeaf;
 
 	alignedHitbox aabb;
 
-	union
-	{
-		int parent;
-		int next;
-	};
+	int parent;
 
 	union
 	{
@@ -58,8 +55,7 @@ private:
 class collisionTree
 {
 public:
-	int findSpace();
-	int createNode();
+	int createNode(alignedHitbox *creationHitbox, int startingNode=0);
 	void deleteNode(int nodeIterator);
 
 	void updateCollision(int nodeIterator);
