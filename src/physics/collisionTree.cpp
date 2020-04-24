@@ -1,8 +1,50 @@
 #include "../../include/physics/collisionTree.h"
 
+collisionNode::collisionNode()
+{
+	isLeaf = NULL;
+	aabb = {NULL, NULL, NULL, NULL};
+	leftNode = NULL;
+	rightNode = NULL;
+	parent = NULL;
+}
+
+collisionNode::collisionNode(alignedHitbox* hitbox, int leftNod, int rightNod, int parentIndex)
+{
+	isLeaf = false;
+	aabb = *hitbox;
+	leftNode = leftNod;
+	rightNode = rightNod;
+	parent = parentIndex;
+}
+
+collisionNode::collisionNode(alignedHitbox* hitbox, gObject *thing, int parentIndex)
+{
+	isLeaf = true;
+	aabb = *hitbox;
+	object = thing;
+	parent = parentIndex;
+}
+
 collisionNode::collisionNode(collisionTree *nodeTree, alignedHitbox *hitbox)
 {
-	
+	nodeTree->createNode(hitbox);
+}
+
+collisionNode::~collisionNode() //destructor may be unecessary
+{
+	aabb = {NULL, NULL, NULL, NULL};
+	parent = NULL;
+	if(isLeaf)
+	{
+		object = nullptr;
+	}
+	else
+	{
+		leftNode = NULL;
+		rightNode = NULL;
+	}
+	isLeaf = false;
 }
 
 bool collisionNode::isCollide(collisionNode *a, collisionNode *b)
@@ -65,53 +107,126 @@ bool collisionNode::isCollide(alignedHitbox* checkAABB)
 	}
 }
 
-int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)
+int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)//consider not passing bool
 {
-	if (!nodeVector[startingNode].isLeaf) // Check if left or right node would be larger, default left
+	if(creationHitbox->xMin>=nodeVector[startingNode].aabb.xMin
+	&&creationHitbox->yMin>=nodeVector[startingNode].aabb.yMin
+	&&creationHitbox->xMax<=nodeVector[startingNode].aabb.xMax
+	&&creationHitbox->yMax<=nodeVector[startingNode].aabb.yMax)
 	{
-		if (/*Conditional Start*/(/*leftSize Start*/(/*Find xLength*/
-			std::max<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.xMax, creationHitbox->xMax) //higher x coord
-			-
-			std::min<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.xMin, creationHitbox->xMin) //lesser x coord
-			)//Find xLength End
-			*
-			(//Find yLength
-				std::max<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.yMax, creationHitbox->yMax) //higher y coord
-				-
-				std::min<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.yMin, creationHitbox->yMin) //lower y coord
-				)/*Find yLength End*/) // leftSize end
-			<= //less-than or equal to
-			(/*RightSize Start*/(//Find xLength Start
-				std::max<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.xMax, creationHitbox->xMax) //higher x coord
-				-
-				std::min<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.xMin, creationHitbox->xMin) //lower x coord
-				)//Find xLength End
-			*
-			(//Find yLength Start
-				std::max<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.yMax, creationHitbox->yMax) //higher y coord
-				-
-				std::min<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.yMin, creationHitbox->yMin) //lower y coord
-				)/*Find yLength End*/)/*rightSize End*/) /*Conditional End*/
+		if (!nodeVector[startingNode].isLeaf) // Check if left or right node would be larger, default left
 		{
-			return createNode(creationHitbox, nodeVector[startingNode].leftNode);
+			if (/*Conditional Start*/(/*leftSize Start*/(/*Find xLength*/
+				std::max<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.xMax, creationHitbox->xMax) //higher x coord
+				-
+				std::min<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.xMin, creationHitbox->xMin) //lesser x coord
+				)//Find xLength End
+				*
+				(//Find yLength
+					std::max<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.yMax, creationHitbox->yMax) //higher y coord
+					-
+					std::min<int>(nodeVector[nodeVector[startingNode].leftNode].aabb.yMin, creationHitbox->yMin) //lower y coord
+					)/*Find yLength End*/) // leftSize end
+				<= //less-than or equal to
+				(/*RightSize Start*/(//Find xLength Start
+					std::max<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.xMax, creationHitbox->xMax) //higher x coord
+					-
+					std::min<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.xMin, creationHitbox->xMin) //lower x coord
+					)//Find xLength End
+				*
+				(//Find yLength Start
+					std::max<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.yMax, creationHitbox->yMax) //higher y coord
+					-
+					std::min<int>(nodeVector[nodeVector[startingNode].rightNode].aabb.yMin, creationHitbox->yMin) //lower y coord
+					)/*Find yLength End*/)/*rightSize End*/) /*Conditional End*/
+			{
+				return createNode(creationHitbox, nodeVector[startingNode].leftNode);
+			}
+			else
+			{
+				return createNode(creationHitbox, nodeVector[startingNode].rightNode);
+			}
 		}
 		else
 		{
-			return createNode(creationHitbox, nodeVector[startingNode].rightNode);
+			if (!freeNodes.empty)
+			{
+				nodeVector[freeNodes.back] = nodeVector[startingNode];
+				nodeVector[startingNode].isLeaf = false;
+				nodeVector[freeNodes.back].parent = startingNode;
+				nodeVector[startingNode].leftNode = freeNodes.back;
+				freeNodes.pop_back();
+				nodeVector[startingNode].aabb = {
+					std::min<int>(nodeVector[startingNode].aabb.xMin, creationHitbox->xMin),//minx
+					std::min<int>(nodeVector[startingNode].aabb.yMin, creationHitbox->yMin),//miny
+					std::max<int>(nodeVector[startingNode].aabb.xMax, creationHitbox->xMax),//maxx
+					std::max<int>(nodeVector[startingNode].aabb.yMax, creationHitbox->yMax) //maxy
+				};
+				if(!freeNodes.empty)
+				{
+					int returnNumber = freeNodes.back;
+					nodeVector[freeNodes.back].isLeaf=true;
+					nodeVector[freeNodes.back].aabb = *creationHitbox;
+					nodeVector[freeNodes.back].parent = startingNode;
+					nodeVector[startingNode].rightNode = freeNodes.back;
+					freeNodes.pop_back();
+					return returnNumber;
+				}
+				else
+				{
+					nodeVector.push_back(collisionNode(creationHitbox, nullptr, startingNode));
+					return (nodeVector.size-1);
+				}
+			}
+			else
+			{
+				nodeVector.push_back(nodeVector[startingNode]);
+				nodeVector[startingNode].isLeaf = false;
+				nodeVector[startingNode].leftNode = (nodeVector.size-1);
+				nodeVector.push_back(collisionNode(creationHitbox, nullptr, startingNode));
+				nodeVector[startingNode].rightNode = (nodeVector.size-1);
+				return (nodeVector.size-1);
+			}
 		}
 	}
 	else
 	{
 		if (!freeNodes.empty)
 		{
-			int returnVariable;
-			returnVariable = freeNodes.back;
+			nodeVector[freeNodes.back] = nodeVector[startingNode];
+			nodeVector[startingNode].isLeaf = false;
+			nodeVector[freeNodes.back].parent = startingNode;
+			nodeVector[startingNode].leftNode = freeNodes.back;
 			freeNodes.pop_back();
-			return returnVariable;
+			nodeVector[startingNode].aabb = {
+				std::min<int>(nodeVector[startingNode].aabb.xMin, creationHitbox->xMin),//minx
+				std::min<int>(nodeVector[startingNode].aabb.yMin, creationHitbox->yMin),//miny
+				std::max<int>(nodeVector[startingNode].aabb.xMax, creationHitbox->xMax),//maxx
+				std::max<int>(nodeVector[startingNode].aabb.yMax, creationHitbox->yMax) //maxy
+			};
+			if(!freeNodes.empty)
+			{
+				int returnNumber = freeNodes.back;
+				nodeVector[freeNodes.back].isLeaf=true;
+				nodeVector[freeNodes.back].aabb = *creationHitbox;
+				nodeVector[freeNodes.back].parent = startingNode;
+				nodeVector[startingNode].rightNode = freeNodes.back;
+				freeNodes.pop_back();
+				return returnNumber;
+			}
+			else
+			{
+				nodeVector.push_back(collisionNode(creationHitbox, nullptr, startingNode));
+				return (nodeVector.size-1);
+			}
 		}
 		else
 		{
-			nodeVector.push_back(collisionNode(this, creationHitbox));
+			nodeVector.push_back(nodeVector[startingNode]);
+			nodeVector[startingNode].isLeaf = false;
+			nodeVector[startingNode].leftNode = (nodeVector.size-1);
+			nodeVector.push_back(collisionNode(creationHitbox, nullptr, startingNode));
+			nodeVector[startingNode].rightNode = (nodeVector.size-1);
 			return (nodeVector.size-1);
 		}
 	}
@@ -119,7 +234,7 @@ int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)
 
 void collisionTree::deleteNode(int nodeIterator)
 {
-	if (nodeVector[nodeVector[nodeIterator].parent].leftNode == nodeIterator) //consider adding bool for l/r to limit comparisons
+	if (nodeVector[nodeVector[nodeIterator].parent].leftNode == nodeIterator) //consider adding bool for l/r to limit ac
 	{
 		if (nodeVector[nodeVector[nodeVector[nodeIterator].parent].parent].leftNode == nodeIterator) //condsider making local scoped variables for these to cut down on dereferences
 		{
@@ -141,6 +256,10 @@ void collisionTree::deleteNode(int nodeIterator)
 			nodeVector[nodeVector[nodeVector[nodeIterator].parent].parent].rightNode = nodeVector[nodeVector[nodeIterator].parent].leftNode;
 		}
 	}
+	nodeVector[nodeIterator].~collisionNode();
+	freeNodes.push_back(nodeIterator);
+	nodeVector[nodeVector[nodeIterator].parent].~collisionNode();
+	freeNodes.push_back(nodeVector[nodeIterator].parent);
 }
 
 void collisionTree::updateCollision(int nodeIterator)

@@ -10,6 +10,8 @@ class gObject
 protected:
 	int spriteClip;
 
+	int nodeIterator;
+
 	int xPos;
 	int yPos;
 

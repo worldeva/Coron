@@ -27,7 +27,11 @@ public:
 class collisionNode
 {
 public:
+	collisionNode();
+	collisionNode(alignedHitbox* hitbox, int leftNod, int rightNod, int parentIndex);
+	collisionNode(alignedHitbox* hitbox, gObject *thing, int parentIndex);
 	collisionNode(collisionTree* nodeTree, alignedHitbox* hitbox);
+	~collisionNode();
 
 	static bool isCollide(collisionNode* a, collisionNode* b);
 	bool isCollide(collisionNode* check);
