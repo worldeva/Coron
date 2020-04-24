@@ -4,18 +4,8 @@
 #include <algorithm>
 
 class collisionTree;
-class alignedHitbox;
 class collisionNode;
 class collisionEvent;
-
-class alignedHitbox
-{
-public:
-	int xMin;
-	int yMin;
-	int xMax;
-	int yMax;
-};
 
 class collisionEvent
 {
@@ -63,6 +53,7 @@ public:
 	void deleteNode(int nodeIterator);
 
 	void updateCollision(int nodeIterator);
+	void updateBox(gObject* updatedObject);
 
 	collisionEvent getNextCollision();
 	gObject* peekNextCollision();

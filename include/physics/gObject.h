@@ -3,14 +3,23 @@
 #include <string>
 #include <vector>
 
+class alignedHitbox
+{
+public:
+	int xMin;
+	int yMin;
+	int xMax;
+	int yMax;
+};
+
 class gObject
 {
+public:
 	gObject(int xPosition, int yPosition, int xVelocity, int yVelocity, int spriteNumber);
-
+	alignedHitbox aabb;
+	int nodeIterator;
 protected:
 	int spriteClip;
-
-	int nodeIterator;
 
 	int xPos;
 	int yPos;

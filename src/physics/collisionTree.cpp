@@ -107,7 +107,7 @@ bool collisionNode::isCollide(alignedHitbox* checkAABB)
 	}
 }
 
-int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)//consider not passing bool
+int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)
 {
 	if(creationHitbox->xMin>=nodeVector[startingNode].aabb.xMin
 	&&creationHitbox->yMin>=nodeVector[startingNode].aabb.yMin
@@ -281,6 +281,21 @@ void collisionTree::updateCollision(int nodeIterator)
 			}
 		}
 		updateStack.pop_back();
+	}
+}
+
+void collisionTree::updateBox(gObject* updatedObject)
+{
+	if(!(updatedObject->aabb.xMin>=nodeVector[updatedObject->nodeIterator].aabb.xMin
+	&&updatedObject->aabb.yMin>=nodeVector[updatedObject->nodeIterator].aabb.yMin
+	&&updatedObject->aabb.xMax<=nodeVector[updatedObject->nodeIterator].aabb.xMax
+	&&updatedObject->aabb.yMax<=nodeVector[updatedObject->nodeIterator].aabb.yMax))
+	{
+		int temp;
+		temp = createNode(&updatedObject->aabb);
+		deleteNode(updatedObject->nodeIterator);
+		nodeVector[temp].object = updatedObject;
+		updatedObject->nodeIterator = temp;
 	}
 }
 
