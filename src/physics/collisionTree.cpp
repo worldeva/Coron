@@ -151,10 +151,10 @@ int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)//
 		{
 			if (!freeNodes.empty)
 			{
-				nodeVector[freeNodes.back] = nodeVector[startingNode];
+				nodeVector[freeNodes.back()] = nodeVector[startingNode];
 				nodeVector[startingNode].isLeaf = false;
-				nodeVector[freeNodes.back].parent = startingNode;
-				nodeVector[startingNode].leftNode = freeNodes.back;
+				nodeVector[freeNodes.back()].parent = startingNode;
+				nodeVector[startingNode].leftNode = freeNodes.back();
 				freeNodes.pop_back();
 				nodeVector[startingNode].aabb = {
 					std::min<int>(nodeVector[startingNode].aabb.xMin, creationHitbox->xMin),//minx
@@ -164,11 +164,11 @@ int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)//
 				};
 				if(!freeNodes.empty)
 				{
-					int returnNumber = freeNodes.back;
-					nodeVector[freeNodes.back].isLeaf=true;
-					nodeVector[freeNodes.back].aabb = *creationHitbox;
-					nodeVector[freeNodes.back].parent = startingNode;
-					nodeVector[startingNode].rightNode = freeNodes.back;
+					int returnNumber = freeNodes.back();
+					nodeVector[freeNodes.back()].isLeaf=true;
+					nodeVector[freeNodes.back()].aabb = *creationHitbox;
+					nodeVector[freeNodes.back()].parent = startingNode;
+					nodeVector[startingNode].rightNode = freeNodes.back();
 					freeNodes.pop_back();
 					return returnNumber;
 				}
@@ -193,10 +193,10 @@ int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)//
 	{
 		if (!freeNodes.empty)
 		{
-			nodeVector[freeNodes.back] = nodeVector[startingNode];
+			nodeVector[freeNodes.back()] = nodeVector[startingNode];
 			nodeVector[startingNode].isLeaf = false;
-			nodeVector[freeNodes.back].parent = startingNode;
-			nodeVector[startingNode].leftNode = freeNodes.back;
+			nodeVector[freeNodes.back()].parent = startingNode;
+			nodeVector[startingNode].leftNode = freeNodes.back();
 			freeNodes.pop_back();
 			nodeVector[startingNode].aabb = {
 				std::min<int>(nodeVector[startingNode].aabb.xMin, creationHitbox->xMin),//minx
@@ -206,11 +206,11 @@ int collisionTree::createNode(alignedHitbox* creationHitbox, int startingNode)//
 			};
 			if(!freeNodes.empty)
 			{
-				int returnNumber = freeNodes.back;
-				nodeVector[freeNodes.back].isLeaf=true;
-				nodeVector[freeNodes.back].aabb = *creationHitbox;
-				nodeVector[freeNodes.back].parent = startingNode;
-				nodeVector[startingNode].rightNode = freeNodes.back;
+				int returnNumber = freeNodes.back();
+				nodeVector[freeNodes.back()].isLeaf=true;
+				nodeVector[freeNodes.back()].aabb = *creationHitbox;
+				nodeVector[freeNodes.back()].parent = startingNode;
+				nodeVector[startingNode].rightNode = freeNodes.back();
 				freeNodes.pop_back();
 				return returnNumber;
 			}
@@ -264,10 +264,24 @@ void collisionTree::deleteNode(int nodeIterator)
 
 void collisionTree::updateCollision(int nodeIterator)
 {
-	do
+	updateStack.push_back(0);
+	nodeCollisions.push_back(collisionEvent({nodeVector[nodeIterator].object}));
+	while (updateStack.size())
 	{
-		
-	} while (!updateStack.size());
+		if(nodeVector[nodeIterator].isCollide(&nodeVector[updateStack.back()]))
+		{
+			if(!nodeVector[updateStack.back()].isLeaf)
+			{
+				updateStack.push_back(nodeVector[updateStack.back()].leftNode);
+				updateStack.push_back(nodeVector[updateStack.back()].rightNode);
+			}
+			else
+			{
+				nodeCollisions.back().collisions.push_back(updateStack.back);
+			}
+		}
+		updateStack.pop_back();
+	}
 }
 
 collisionEvent collisionTree::getNextCollision()
